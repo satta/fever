@@ -113,7 +113,7 @@ type BloomHandler struct {
 	ForwardHandler        Handler
 	DoForwardAlert        bool
 	AlertPrefix           string
-	BlacklistIOCs         map[string]struct{}
+	BlocklistIOCs         map[string]struct{}
 }
 
 // BloomNoFileErr is an error thrown when a file-based operation (e.g.
@@ -142,7 +142,7 @@ func MakeBloomHandler(iocBloom *bloom.BloomFilter,
 		ForwardHandler:    forwardHandler,
 		DoForwardAlert:    (util.ForwardAllEvents || util.AllowType("alert")),
 		AlertPrefix:       alertPrefix,
-		BlacklistIOCs:     make(map[string]struct{}),
+		BlocklistIOCs:     make(map[string]struct{}),
 	}
 	log.WithFields(log.Fields{
 		"N":      iocBloom.N,
@@ -155,7 +155,7 @@ func MakeBloomHandler(iocBloom *bloom.BloomFilter,
 // Bloom filter specified by the given file name.
 func MakeBloomHandlerFromFile(bloomFilename string, compressed bool,
 	databaseChan chan types.Entry, forwardHandler Handler, alertPrefix string,
-	blacklistIOCs []string) (*BloomHandler, error) {
+	blockedIOCs []string) (*BloomHandler, error) {
 	log.WithFields(log.Fields{
 		"domain": "bloom",
 	}).Infof("loading Bloom filter '%s'", bloomFilename)
@@ -174,11 +174,11 @@ func MakeBloomHandlerFromFile(bloomFilename string, compressed bool,
 		}
 	}
 	bh := MakeBloomHandler(iocBloom, databaseChan, forwardHandler, alertPrefix)
-	for _, v := range blacklistIOCs {
+	for _, v := range blockedIOCs {
 		if bh.IocBloom.Check([]byte(v)) {
-			bh.Logger.Warnf("filter contains blacklisted indicator '%s'", v)
+			bh.Logger.Warnf("filter contains blocked indicator '%s'", v)
 		}
-		bh.BlacklistIOCs[v] = struct{}{}
+		bh.BlocklistIOCs[v] = struct{}{}
 	}
 	bh.BloomFilename = bloomFilename
 	bh.BloomFileIsCompressed = compressed
@@ -207,9 +207,9 @@ func (a *BloomHandler) Reload() error {
 	}
 	a.Lock()
 	a.IocBloom = iocBloom
-	for k := range a.BlacklistIOCs {
+	for k := range a.BlocklistIOCs {
 		if a.IocBloom.Check([]byte(k)) {
-			a.Logger.Warnf("filter contains blacklisted indicator '%s'", k)
+			a.Logger.Warnf("filter contains blocked indicator '%s'", k)
 		}
 	}
 	a.Unlock()
@@ -226,7 +226,7 @@ func (a *BloomHandler) Consume(e *types.Entry) error {
 		a.Lock()
 		// check HTTP host first: foo.bar.de
 		if a.IocBloom.Check([]byte(e.HTTPHost)) {
-			if _, present := a.BlacklistIOCs[e.HTTPHost]; !present {
+			if _, present := a.BlocklistIOCs[e.HTTPHost]; !present {
 				n := MakeAlertEntryForHit(*e, "http-host", a.AlertPrefix, e.HTTPHost)
 				a.DatabaseEventChan <- n
 				a.ForwardHandler.Consume(&n)
@@ -253,7 +253,7 @@ func (a *BloomHandler) Consume(e *types.Entry) error {
 		hostPath := fmt.Sprintf("%s%s", u.Host, u.Path)
 		// http://foo.bar.de:123/baz
 		if a.IocBloom.Check([]byte(fullURL)) {
-			if _, present := a.BlacklistIOCs[fullURL]; !present {
+			if _, present := a.BlocklistIOCs[fullURL]; !present {
 				n := MakeAlertEntryForHit(*e, "http-url", a.AlertPrefix, fullURL)
 				a.DatabaseEventChan <- n
 				a.ForwardHandler.Consume(&n)
@@ -261,7 +261,7 @@ func (a *BloomHandler) Consume(e *types.Entry) error {
 		} else
 		// foo.bar.de:123/baz
 		if a.IocBloom.Check([]byte(hostPath)) {
-			if _, present := a.BlacklistIOCs[hostPath]; !present {
+			if _, present := a.BlocklistIOCs[hostPath]; !present {
 				n := MakeAlertEntryForHit(*e, "http-url", a.AlertPrefix, hostPath)
 				a.DatabaseEventChan <- n
 				a.ForwardHandler.Consume(&n)
@@ -269,7 +269,7 @@ func (a *BloomHandler) Consume(e *types.Entry) error {
 		} else
 		// /baz
 		if a.IocBloom.Check([]byte(u.Path)) {
-			if _, present := a.BlacklistIOCs[u.Path]; !present {
+			if _, present := a.BlocklistIOCs[u.Path]; !present {
 				n := MakeAlertEntryForHit(*e, "http-url", a.AlertPrefix, u.Path)
 				a.DatabaseEventChan <- n
 				a.ForwardHandler.Consume(&n)
@@ -280,7 +280,7 @@ func (a *BloomHandler) Consume(e *types.Entry) error {
 	} else if e.EventType == "dns" {
 		a.Lock()
 		if a.IocBloom.Check([]byte(e.DNSRRName)) {
-			if _, present := a.BlacklistIOCs[e.DNSRRName]; !present {
+			if _, present := a.BlocklistIOCs[e.DNSRRName]; !present {
 				var n types.Entry
 				if e.DNSType == "query" {
 					n = MakeAlertEntryForHit(*e, "dns-req", a.AlertPrefix, e.DNSRRName)
@@ -299,7 +299,7 @@ func (a *BloomHandler) Consume(e *types.Entry) error {
 	} else if e.EventType == "tls" {
 		a.Lock()
 		if a.IocBloom.Check([]byte(e.TLSSni)) {
-			if _, present := a.BlacklistIOCs[e.TLSSni]; !present {
+			if _, present := a.BlocklistIOCs[e.TLSSni]; !present {
 				n := MakeAlertEntryForHit(*e, "tls-sni", a.AlertPrefix, e.TLSSni)
 				a.DatabaseEventChan <- n
 				a.ForwardHandler.Consume(&n)

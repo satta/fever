@@ -500,7 +500,7 @@ func TestBloomHandlerEmptyInput(t *testing.T) {
 	}
 }
 
-func TestBloomHandlerBlacklistedInputFromFile(t *testing.T) {
+func TestBloomHandlerBlockedInputFromFile(t *testing.T) {
 	b1 := bloom.Initialize(1000, 0.0001)
 	b1.Add([]byte("/"))
 	b1File, err := ioutil.TempFile("", "blist")
@@ -526,7 +526,7 @@ func TestBloomHandlerBlacklistedInputFromFile(t *testing.T) {
 	if len(entries) != 4 {
 		t.Fatal("missing log entries")
 	}
-	if entries[2].Message != "filter contains blacklisted indicator '/'" {
+	if entries[2].Message != "filter contains blocked indicator '/'" {
 		t.Fatal("wrong log entry for invalid IP range")
 	}
 
@@ -558,7 +558,7 @@ func TestBloomHandlerBlacklistedInputFromFile(t *testing.T) {
 	if len(entries) != 2 {
 		t.Fatal("missing log entries")
 	}
-	if entries[0].Message != "filter contains blacklisted indicator '/'" {
+	if entries[0].Message != "filter contains blocked indicator '/'" {
 		t.Fatal("wrong log entry for invalid IP range")
 	}
 }
@@ -837,7 +837,7 @@ func TestBloomHandlerURL(t *testing.T) {
 	}
 }
 
-func TestBloomHandlerBlacklistedSkip(t *testing.T) {
+func TestBloomHandlerBlockedSkip(t *testing.T) {
 	e1 := types.Entry{
 		SrcIP:      "10.0.0.1",
 		SrcPort:    23545,

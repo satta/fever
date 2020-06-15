@@ -90,7 +90,7 @@ func MakeIPHandler(ranger cidranger.Ranger,
 	databaseChan chan types.Entry, forwardHandler Handler, alertPrefix string) *IPHandler {
 	bh := &IPHandler{
 		Logger: log.WithFields(log.Fields{
-			"domain": "ip-blacklist",
+			"domain": "ip-alertlist",
 		}),
 		Ranger:            ranger,
 		DatabaseEventChan: databaseChan,
@@ -176,7 +176,7 @@ func (a *IPHandler) Consume(e *types.Entry) error {
 
 // GetName returns the name of the handler
 func (a *IPHandler) GetName() string {
-	return "IP blacklist handler"
+	return "IP alert handler"
 }
 
 // GetEventTypes returns a slice of event type strings that this handler

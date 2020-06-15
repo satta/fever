@@ -111,7 +111,8 @@ flowextract:
 #  file: ./in.bloom.gz
 #  zipped: true
 #  alert-prefix: BLF
-#  blacklist-iocs:
+#  # IOCs always blocked in indicator sets
+#  blocked-iocs:
 #    - /
 #    - /index.htm
 #    - /index.html

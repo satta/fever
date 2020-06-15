@@ -118,7 +118,7 @@ func TestIPHandler(t *testing.T) {
 	if len(bhTypes) != 8 {
 		t.Fatal("IP handler should claim eight types")
 	}
-	if ih.GetName() != "IP blacklist handler" {
+	if ih.GetName() != "IP alert handler" {
 		t.Fatal("IP handler has wrong name")
 	}
 
@@ -195,7 +195,7 @@ func TestIPHandlerFromFile(t *testing.T) {
 	if len(bhTypes) != 8 {
 		t.Fatal("IP handler should claim eight types")
 	}
-	if ih.GetName() != "IP blacklist handler" {
+	if ih.GetName() != "IP alert handler" {
 		t.Fatal("IP handler has wrong name")
 	}
 

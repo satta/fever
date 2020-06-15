@@ -31,7 +31,7 @@ Flags:
       --active-rdns-cache-expiry duration        cache expiry interval for rDNS lookups (default 2m0s)
       --active-rdns-private-only                 only do active rDNS enrichment for RFC1918 IPs
       --bloom-alert-prefix string                String prefix for Bloom filter alerts (default "BLF")
-      --bloom-blacklist-iocs strings             Blacklisted strings in Bloom filter (will cause filter to be rejected) (default [/,/index.htm,/index.html])
+      --bloom-blocked-iocs strings               Blocked strings in Bloom filter (will cause filter to be rejected) (default [/,/index.htm,/index.html])
   -b, --bloom-file string                        Bloom filter for external indicator screening
   -z, --bloom-zipped                             use gzipped Bloom filter file
   -c, --chunksize uint                           chunk size for batched event handling (e.g. inserts) (default 50000)
@@ -64,8 +64,8 @@ Flags:
   -r, --in-redis string                          Redis input server (assumes "suricata" list key, no pwd)
       --in-redis-nopipe                          do not use Redis pipelining
   -i, --in-socket string                         filename of input socket (accepts EVE JSON) (default "/tmp/suri.sock")
-      --ip-alert-prefix string                   String prefix for IP blacklist alerts (default "IP-BLACKLIST")
-      --ip-blacklist string                      List with IP ranges to alert on
+      --ip-alert-prefix string                   String prefix for IP address alerts (default "IP-ALERTLIST")
+      --ip-alertlist string                      List with IP ranges to alert on
       --logfile string                           Path to log file
       --logjson                                  Output logs in JSON format
       --metrics-enable                           submit performance metrics to central sink

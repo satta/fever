@@ -234,19 +234,19 @@ func mainfunc(cmd *cobra.Command, args []string) {
 	bloomFilePath := viper.GetString("bloom.file")
 	bloomAlertPrefix := viper.GetString("bloom.alert-prefix")
 	bloomCompressed := viper.GetBool("bloom.zipped")
-	bloomBlacklist := viper.GetStringSlice("bloom.blacklist-iocs")
+	bloomBlocked := viper.GetStringSlice("bloom.blocked-iocs")
 	var bloomHandler *processing.BloomHandler
 	if bloomFilePath != "" {
 		bloomHandler, err = processing.MakeBloomHandlerFromFile(bloomFilePath,
 			bloomCompressed, eventChan, forwardHandler, bloomAlertPrefix,
-			bloomBlacklist)
+			bloomBlocked)
 		if err != nil {
 			log.Fatal(err)
 		}
 		dispatcher.RegisterHandler(bloomHandler)
 	}
 
-	ipFilePath := viper.GetString("ip.blacklist")
+	ipFilePath := viper.GetString("ip.alertlist")
 	ipAlertPrefix := viper.GetString("ip.alert-prefix")
 	var ipHandler *processing.IPHandler
 	if ipFilePath != "" {
@@ -663,13 +663,13 @@ func init() {
 	viper.BindPFlag("bloom.zipped", runCmd.PersistentFlags().Lookup("bloom-zipped"))
 	runCmd.PersistentFlags().StringP("bloom-alert-prefix", "", "BLF", "String prefix for Bloom filter alerts")
 	viper.BindPFlag("bloom.alert-prefix", runCmd.PersistentFlags().Lookup("bloom-alert-prefix"))
-	runCmd.PersistentFlags().StringSliceP("bloom-blacklist-iocs", "", []string{"/", "/index.htm", "/index.html"}, "Blacklisted strings in Bloom filter (will cause filter to be rejected)")
-	viper.BindPFlag("bloom.blacklist-iocs", runCmd.PersistentFlags().Lookup("bloom-blacklist-iocs"))
+	runCmd.PersistentFlags().StringSliceP("bloom-blocked-iocs", "", []string{"/", "/index.htm", "/index.html"}, "Blocked strings in Bloom filter (will cause filter to be rejected)")
+	viper.BindPFlag("bloom.blocked-iocs", runCmd.PersistentFlags().Lookup("bloom-blocked-iocs"))
 
-	// IP blacklist alerting options
-	runCmd.PersistentFlags().StringP("ip-blacklist", "", "", "List with IP ranges to alert on")
-	viper.BindPFlag("ip.blacklist", runCmd.PersistentFlags().Lookup("ip-blacklist"))
-	runCmd.PersistentFlags().StringP("ip-alert-prefix", "", "IP-BLACKLIST", "String prefix for IP blacklist alerts")
+	// IP address alerting options
+	runCmd.PersistentFlags().StringP("ip-alertlist", "", "", "List with IP ranges to alert on")
+	viper.BindPFlag("ip.alertlist", runCmd.PersistentFlags().Lookup("ip-alertlist"))
+	runCmd.PersistentFlags().StringP("ip-alert-prefix", "", "IP-ALERTLIST", "String prefix for IP address alerts")
 	viper.BindPFlag("ip.alert-prefix", runCmd.PersistentFlags().Lookup("ip-alert-prefix"))
 
 	// Flow extraction options
